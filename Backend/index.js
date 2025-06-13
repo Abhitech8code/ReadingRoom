@@ -56,7 +56,7 @@ app.post("/api/create-payment-intent", async (req, res) => {
 });
 
 // Redirect all other routes to frontend
-app.get("*", (req, res) => {
+app.get("/", (req, res) => {
   res.redirect("https://readingroom-1.onrender.com" + req.originalUrl);
 });
 
