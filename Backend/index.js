@@ -1,4 +1,4 @@
-fix and send complete server.js file , // server.js
+ // server.js
 
 import express from "express";
 import mongoose from "mongoose";
