@@ -5,8 +5,10 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import Stripe from "stripe";
+import path from "path";
+import { fileURLToPath } from "url";
 
-// Routes
+// Route imports
 import bookRoute from "./route/book.route.js";
 import userRoute from "./route/user.route.js";
 
@@ -15,13 +17,17 @@ dotenv.config();
 const app = express();
 const PORT = process.env.PORT || 4000;
 const URI = process.env.MONGO_URI;
-const stripe = new Stripe("sk_test_51RYWK2PNZ4xOj1q0L5vK8yyzX3ENZAEYqewSrP3WBSbK5fMgeGSXSEiXMeXKoxzszorxbiVxhwzjEOlsnSeIxS5900EU6yyb3q"); // Secret key
+const stripe = new Stripe("sk_test_51RYWK2PNZ4xOj1q0L5vK8yyzX3ENZAEYqewSrP3WBSbK5fMgeGSXSEiXMeXKoxzszorxbiVxhwzjEOlsnSeIxS5900EU6yyb3q"); // Your secret key
+
+// Required for handling paths in ES Modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB (no deprecated options)
+// MongoDB Connection (clean version)
 async function connectDB() {
   try {
     await mongoose.connect(URI);
@@ -42,7 +48,7 @@ app.post("/api/create-payment-intent", async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Convert to paise
+      amount: amount * 100, // convert to smallest currency unit (paise)
       currency: "inr",
     });
 
@@ -55,12 +61,15 @@ app.post("/api/create-payment-intent", async (req, res) => {
   }
 });
 
-// Redirect all other routes to frontend
+// Serve frontend static files
+app.use(express.static(path.join(__dirname, "build")));
+
+// SPA fallback — serve index.html for unknown routes (like /about, /contact)
 app.get("/", (req, res) => {
-  res.redirect("https://readingroom-1.onrender.com" + req.originalUrl);
+  res.sendFile(path.join(__dirname, "build", "index.html"));
 });
 
-// Start Server
+// Start the server
 app.listen(PORT, () => {
   console.log(`🚀 Server running at http://localhost:${PORT}`);
 });
