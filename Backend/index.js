@@ -19,7 +19,7 @@ const PORT = process.env.PORT || 4000;
 const MONGO_URI = process.env.MONGO_URI;
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 
-// Fix __dirname in ES module
+// Required for __dirname in ES modules
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -27,10 +27,10 @@ const __dirname = path.dirname(__filename);
 app.use(cors());
 app.use(express.json());
 
-// MongoDB Connection
+// Connect to MongoDB
 async function connectDB() {
   if (!MONGO_URI) {
-    console.error("❌ MONGO_URI not found in .env file");
+    console.error("❌ MONGO_URI is not defined in .env");
     process.exit(1);
   }
 
@@ -39,6 +39,7 @@ async function connectDB() {
     console.log("✅ Connected to MongoDB Atlas");
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error);
+    process.exit(1);
   }
 }
 connectDB();
@@ -53,25 +54,24 @@ app.post("/api/create-payment-intent", async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100,
+      amount: amount * 100, // smallest currency unit
       currency: "inr",
     });
 
-    res.send({
-      clientSecret: paymentIntent.client_secret,
-    });
+    res.send({ clientSecret: paymentIntent.client_secret });
   } catch (err) {
     console.error("Stripe Error:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-// ✅ Serve React frontend from 'dist' or 'build' (adjust if needed)
-app.use(express.static(path.join(__dirname, "../frontend/dist"))); // Or ../frontend/build if using CRA
+// Serve Frontend (React/Vite build output)
+const frontendPath = path.join(__dirname, "../frontend/dist"); // adjust if using CRA -> ../frontend/build
+app.use(express.static(frontendPath));
 
-// ✅ Root route - serves index.html
+// Root route fallback
 app.get("*", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend/dist/index.html")); // Or ../frontend/build/index.html
+  res.sendFile(path.join(frontendPath, "index.html"));
 });
 
 // Start Server
