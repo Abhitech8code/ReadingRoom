@@ -14,21 +14,18 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-const URI = process.env.MongoDBURI;
-const stripe = new Stripe("sk_test_51RYWK2PNZ4xOj1q0L5vK8yyzX3ENZAEYqewSrP3WBSbK5fMgeGSXSEiXMeXKoxzszorxbiVxhwzjEOlsnSeIxS5900EU6yyb3q"); // Secret key
+const MONGO_URI = process.env.MONGO_URI; // 👈 match .env key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY); // move secret key to .env for safety
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 
-// Connect to MongoDB
+// Connect to MongoDB Atlas
 async function connectDB() {
   try {
-    await mongoose.connect(URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
-    console.log("✅ Connected to MongoDB");
+    await mongoose.connect(MONGO_URI); // 👈 removed deprecated options
+    console.log("✅ Connected to MongoDB Atlas");
   } catch (error) {
     console.error("❌ MongoDB Connection Error:", error);
   }
@@ -45,7 +42,7 @@ app.post("/api/create-payment-intent", async (req, res) => {
 
   try {
     const paymentIntent = await stripe.paymentIntents.create({
-      amount: amount * 100, // Stripe uses smallest currency unit (paise)
+      amount: amount * 100, // Stripe uses the smallest currency unit
       currency: "inr",
     });
 
