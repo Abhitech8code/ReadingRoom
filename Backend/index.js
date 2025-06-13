@@ -27,7 +27,7 @@ if (!MONGO_URI || !STRIPE_SECRET_KEY) {
 const stripe = new Stripe(STRIPE_SECRET_KEY);
 
 // Middlewares
-app.use(cors());
+app.use(cors({ origin: "https://readingroom-1.onrender.com" })); // 👈 Allow your frontend domain
 app.use(express.json());
 
 // MongoDB Connection
@@ -45,7 +45,7 @@ connectDB();
 app.use("/book", bookRoute);
 app.use("/user", userRoute);
 
-// Stripe Route
+// Stripe Payment Intent
 app.post("/api/create-payment-intent", async (req, res) => {
   const { amount } = req.body;
 
@@ -62,20 +62,16 @@ app.post("/api/create-payment-intent", async (req, res) => {
   }
 });
 
-// Root Route – fixes 404 error on base URL
+// Serve frontend link for root route
 app.get("/", (req, res) => {
-  res.send("📚 Welcome to the Reading Room API!");
+  res.redirect("https://readingroom-1.onrender.com"); // 👈 Redirect root to frontend
 });
 
-// Optional: Serve React build if hosting frontend together
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Uncomment below if frontend build is present
-// app.use(express.static(path.join(__dirname, "client/build")));
-// app.get("*", (req, res) => {
-//   res.sendFile(path.join(__dirname, "client/build", "index.html"));
-// });
+// Optional: Handle unknown routes with 404 JSON or redirect
+app.use("*", (req, res) => {
+  res.status(404).json({ message: "Route not found" });
+  // Or redirect to frontend: res.redirect("https://readingroom-1.onrender.com");
+});
 
 // Start Server
 app.listen(PORT, () => {
