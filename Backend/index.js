@@ -70,7 +70,7 @@ app.get("/", (req, res) => {
 });
 
 // Catch-all route
-app.use("*", (req, res) => {
+app.use("/", (req, res) => {
   res.status(404).json({ message: "API route not found" });
 });
 
